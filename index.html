@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zenith Tasks - Planificador de Tareas (Sprint 2)</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="claro">
+
+    <div class="animacion-fondo">
+        <canvas id="lienzo-particulas"></canvas>
+    </div>
+
+    <div class="contenedor-app">
+        <!-- Encabezado -->
+        <header class="app-encabezado">
+            <div class="marca">
+                <div class="marca-logo">Z</div>
+                <div>
+                    <h1>Zenith Tasks</h1>
+                    <p>Planificador inteligente - Sprint 2</p>
+                </div>
+            </div>
+
+            <nav class="navegacion-pestanas">
+                <button onclick="cambiarPestana('hoy')" id="btn-pestana-hoy" class="btn-pestana activo">Tareas</button>
+                <button onclick="cambiarPestana('calendario')" id="btn-pestana-calendario" class="btn-pestana">Calendario</button>
+                <button onclick="cambiarPestana('notas')" id="btn-pestana-notas" class="btn-pestana">Notas</button>
+            </nav>
+
+            <div class="acciones-encabezado">
+                <button onclick="alternarModoOscuro()" class="btn-icono" title="Cambiar tema">
+                    <img src="multimedia/moon-stars.svg" alt="Luna">
+                </button>
+                <button onclick="abrirModal()" class="btn-primario">
+                    <span>+</span> Nueva Tarea
+                </button>
+            </div>
+        </header>
+
+        <!-- Contenido Principal -->
+        <main class="app-principal">
+            <!-- VISTA TAREAS -->
+            <section id="vista-hoy" class="seccion-vista">
+                <div class="banner-principal">
+                    <div class="info-hero">
+                        <span class="insignia-activa">Sprint 2 Activo</span>
+                        <h2>Gestión de Tareas</h2>
+                        <p id="subtitulo-conteo">Administra, valida y elimina tus tareas programadas.</p>
+                    </div>
+                </div>
+
+                <div class="barra-filtros">
+                    <div class="grupo-filtros">
+                        <button onclick="filtrarTareas('todas')" class="chip-filtro activo" data-filtro="todas">Todas</button>
+                        <button onclick="filtrarTareas('PENDIENTE')" class="chip-filtro" data-filtro="PENDIENTE">Pendientes</button>
+                        <button onclick="filtrarTareas('EN PROCESO')" class="chip-filtro" data-filtro="EN PROCESO">En Proceso</button>
+                        <button onclick="filtrarTareas('REVISIÓN')" class="chip-filtro" data-filtro="REVISIÓN">Revisión</button>
+                        <button onclick="filtrarTareas('HECHO')" class="chip-filtro" data-filtro="HECHO">Hecho</button>
+                    </div>
+                </div>
+
+                <div id="contenedor-tareas" class="lista-tareas"></div>
+            </section>
+
+            <!-- VISTA CALENDARIO -->
+            <section id="vista-calendario" class="seccion-vista oculto">
+                <div class="caja-tarjeta">
+                    <div class="cabecera-calendario">
+                        <div>
+                            <h2 id="titulo-mes-calendario">Noviembre 2026</h2>
+                            <p class="subtitulo">Selecciona un día para gestionar sus tareas asignadas</p>
+                        </div>
+                        <div class="navegacion-calendario">
+                            <button onclick="cambiarMes(-1)">❮</button>
+                            <button onclick="irMesActual()">Hoy</button>
+                            <button onclick="cambiarMes(1)">❯</button>
+                        </div>
+                    </div>
+                    <div class="dias-semana-calendario">
+                        <div>Lun</div><div>Mar</div><div>Mié</div><div>Jue</div><div>Vie</div><div>Sáb</div><div>Dom</div>
+                    </div>
+                    <div id="rejilla-calendario" class="rejilla-calendario"></div>
+                </div>
+
+                <div class="caja-tarjeta margen-superior">
+                    <h3 id="titulo-dia-seleccionado">Tareas para la fecha seleccionada</h3>
+                    <div id="tareas-dia-seleccionado" class="lista-tareas margen-superior-sm"></div>
+                </div>
+            </section>
+
+            <!-- VISTA NOTAS -->
+            <section id="vista-notas" class="seccion-vista oculto">
+                <div class="caja-tarjeta">
+                    <div class="cabecera-calendario">
+                        <div>
+                            <h2>Bloc de Notas Rápidas</h2>
+                            <p class="subtitulo">Apunta ideas relámpago que no requieran una tarea estructurada.</p>
+                        </div>
+                        <button onclick="abrirModalNota()" class="btn-primario">Nueva Nota</button>
+                    </div>
+                    <div id="contenedor-notas" class="rejilla-notas margen-superior"></div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Modal Formulario Tarea -->
+    <div id="modal-tarea" class="capa-modal oculto">
+        <div class="tarjeta-modal">
+            <div class="cabecera-modal">
+                <h3 id="titulo-modal">Nueva Tarea</h3>
+                <button onclick="cerrarModal()" class="btn-cerrar">&times;</button>
+            </div>
+            <p class="aviso-modal">Complete todos los campos según las reglas de validación.</p>
+            
+            <form id="formulario-tarea" onsubmit="manejarEnvioFormulario(event)">
+                <div class="grupo-formulario">
+                    <label for="nombre-tarea">Nombre * (>8 caracteres)</label>
+                    <input type="text" id="nombre-tarea" placeholder="Ej. Diseñar la interfaz de usuario">
+                    <span id="error-nombre" class="texto-error"></span>
+                </div>
+                <div class="grupo-formulario">
+                    <label for="descripcion-tarea">Descripción * (>15 caracteres)</label>
+                    <textarea id="descripcion-tarea" rows="2" placeholder="Describe detalladamente lo que necesitas hacer..."></textarea>
+                    <span id="error-descripcion" class="texto-error"></span>
+                </div>
+                <div class="fila-formulario">
+                    <div class="grupo-formulario">
+                        <label for="asignado-tarea">Asignado A * (>8 caracteres)</label>
+                        <input type="text" id="asignado-tarea" placeholder="Ej. Lucas Ramírez">
+                        <span id="error-asignado" class="texto-error"></span>
+                    </div>
+                    <div class="grupo-formulario">
+                        <label for="fecha-tarea">Fecha de Entrega *</label>
+                        <input type="date" id="fecha-tarea">
+                        <span id="error-fecha" class="texto-error"></span>
+                    </div>
+                </div>
+                <div class="grupo-formulario">
+                    <label for="estado-tarea">Estado *</label>
+                    <select id="estado-tarea">
+                        <option value="" disabled selected>Selecciona estado</option>
+                        <option value="PENDIENTE">PENDIENTE</option>
+                        <option value="EN PROCESO">EN PROCESO</option>
+                        <option value="REVISIÓN">REVISIÓN</option>
+                        <option value="HECHO">HECHO</option>
+                    </select>
+                    <span id="error-estado" class="texto-error"></span>
+                </div>
+                <div class="pie-modal">
+                    <button type="button" onclick="cerrarModal()" class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-enviar">Guardar tarea</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Formulario Nota -->
+    <div id="modal-nota" class="capa-modal oculto">
+        <div class="tarjeta-modal">
+            <div class="cabecera-modal">
+                <h3>Nueva Nota Rápida</h3>
+                <button onclick="cerrarModalNota()" class="btn-cerrar">&times;</button>
+            </div>
+            <form id="formulario-nota" onsubmit="manejarEnvioNota(event)">
+                <div class="grupo-formulario margen-superior-sm">
+                    <label for="texto-nota">Contenido de la nota *</label>
+                    <textarea id="texto-nota" rows="3" required placeholder="Escribe tu nota rápida..."></textarea>
+                </div>
+                <div class="pie-modal">
+                    <button type="button" onclick="cerrarModalNota()" class="btn-secundario">Cancelar</button>
+                    <button type="submit" class="btn-enviar">Guardar nota</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

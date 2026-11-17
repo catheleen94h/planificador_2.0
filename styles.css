@@ -1,0 +1,225 @@
+:root {
+    --fondo-principal: #f8fafc;
+    --fondo-tarjeta: rgba(255, 255, 255, 0.9);
+    --texto-principal: #1e293b;
+    --texto-secundario: #64748b;
+    --color-borde: #e2e8f0;
+    --color-primario: #5b21b6;
+    --color-primario-hover: #4c1d95;
+    --color-primario-claro: #f5f3ff;
+}
+
+body.oscuro {
+    --fondo-principal: #050508;
+    --fondo-tarjeta: rgba(13, 13, 22, 0.85);
+    --texto-principal: #f1f5f9;
+    --texto-secundario: #94a3b8;
+    --color-borde: #1e1b4b;
+    --color-primario: #7c3aed;
+    --color-primario-hover: #8b5cf6;
+    --color-primario-claro: rgba(30, 27, 75, 0.4);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+body {
+    background-color: var(--fondo-principal);
+    color: var(--texto-principal);
+    min-height: 100vh;
+    position: relative;
+    overflow-x: hidden;
+}
+
+/* Canvas de partículas corregido para que sea visible */
+.animacion-fondo {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    overflow: hidden;
+}
+
+#lienzo-particulas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+.contenedor-app {
+    position: relative;
+    z-index: 10;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 24px 16px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.app-encabezado {
+    background: var(--fondo-tarjeta);
+    backdrop-filter: blur(16px);
+    border: 1px solid var(--color-borde);
+    padding: 16px 24px;
+    border-radius: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
+    margin-bottom: 24px;
+}
+
+.marca { display: flex; align-items: center; gap: 12px; }
+.marca-logo {
+    width: 40px; height: 40px; background: var(--color-primario); color: white;
+    font-weight: bold; border-radius: 12px; display: flex; align-items: center; justify-content: center;
+}
+.marca h1 { font-size: 1.15rem; font-weight: 700; color: var(--color-primario); }
+.marca p { font-size: 0.75rem; color: var(--texto-secundario); }
+
+.navegacion-pestanas { display: flex; gap: 4px; background: var(--color-primario-claro); padding: 4px; border-radius: 12px; }
+.btn-pestana { background: transparent; border: none; padding: 8px 14px; font-size: 0.85rem; font-weight: 500; color: var(--texto-secundario); cursor: pointer; border-radius: 8px; }
+.btn-pestana.activo { background: var(--fondo-tarjeta); color: var(--color-primario); box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+
+.acciones-encabezado { display: flex; align-items: center; gap: 10px; }
+.btn-icono, .btn-primario, .btn-secundario { cursor: pointer; border: none; border-radius: 12px; padding: 10px 16px; font-size: 0.85rem; font-weight: 600; }
+.btn-icono { background: var(--color-primario-claro); color: var(--color-primario); padding: 10px; display: flex; align-items: center; justify-content: center; }
+.btn-icono img { width: 20px; height: 20px; object-fit: contain; }
+.btn-primario { background: var(--color-primario); color: white; display: flex; align-items: center; gap: 6px; }
+.btn-primario:hover { background: var(--color-primario-hover); }
+
+.seccion-vista { display: flex; flex-direction: column; gap: 20px; }
+.seccion-vista.oculto { display: none; }
+
+.banner-principal {
+    background: var(--color-primario); color: white; padding: 24px; border-radius: 24px;
+    box-shadow: 0 10px 25px rgba(91, 33, 182, 0.2);
+}
+.insignia-activa { background: rgba(255, 255, 255, 0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.7rem; text-transform: uppercase; font-weight: 700; }
+.info-hero h2 { font-size: 1.5rem; margin: 6px 0 2px; }
+.info-hero p { font-size: 0.85rem; opacity: 0.9; }
+
+.barra-filtros {
+    background: var(--fondo-tarjeta); backdrop-filter: blur(16px); border: 1px solid var(--color-borde);
+    padding: 12px 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center;
+}
+.grupo-filtros { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip-filtro { background: var(--color-borde); border: none; padding: 6px 12px; border-radius: 10px; font-size: 0.75rem; font-weight: 600; color: var(--texto-secundario); cursor: pointer; }
+.chip-filtro.activo { background: var(--color-primario); color: white; }
+
+.lista-tareas { display: flex; flex-direction: column; gap: 12px; }
+
+.tarjeta-tarea {
+    background: var(--fondo-tarjeta); backdrop-filter: blur(16px); border: 1px solid var(--color-borde);
+    padding: 16px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px;
+}
+.info-principal-tarea { display: flex; align-items: flex-start; gap: 14px; }
+.casilla-tarea {
+    width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--texto-secundario);
+    background: transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; margin-top: 2px;
+}
+.casilla-tarea.completada { background: #10b981; border-color: #10b981; color: white; }
+
+.titulo-tarea { font-size: 0.95rem; font-weight: 600; margin-bottom: 2px; }
+.titulo-tarea.tachado { text-decoration: line-through; color: var(--texto-secundario); }
+.descripcion-tarea { font-size: 0.8rem; color: var(--texto-secundario); margin-bottom: 8px; }
+
+.etiquetas-tarea { display: flex; gap: 6px; flex-wrap: wrap; }
+.etiqueta { font-size: 0.65rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; text-transform: uppercase; }
+
+.badge-PENDIENTE { background: #f1f5f9; color: #475569; }
+.badge-EN-PROCESO { background: #dbeafe; color: #1d4ed8; }
+.badge-REVISIÓN { background: #fef3c7; color: #b45309; }
+.badge-HECHO { background: #d1fae5; color: #047857; }
+.badge-info { background: var(--color-primario-claro); color: var(--color-primario); }
+
+.acciones-tarea { display: flex; gap: 6px; }
+.btn-accion { background: var(--fondo-principal); border: 1px solid var(--color-borde); padding: 8px; border-radius: 10px; cursor: pointer; color: var(--texto-secundario); display: flex; align-items: center; justify-content: center; }
+.btn-accion:hover { border-color: var(--color-primario); }
+
+.btn-accion img { width: 18px; height: 18px; object-fit: contain; }
+
+body.oscuro .btn-accion img { filter: brightness(0) invert(1); }
+body.oscuro .btn-icono img { filter: brightness(0) saturate(100%) invert(86%) sepia(90%) saturate(1200%) hue-rotate(5deg); }
+body:not(.oscuro) .btn-icono img { filter: brightness(0) saturate(100%) invert(25%) sepia(85%) saturate(3000%) hue-rotate(255deg); }
+
+.caja-tarjeta { background: var(--fondo-tarjeta); border: 1px solid var(--color-borde); padding: 24px; border-radius: 20px; }
+.subtitulo { font-size: 0.85rem; color: var(--texto-secundario); }
+
+/* Calendario Estilos */
+.cabecera-calendario { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.navegacion-calendario { display: flex; gap: 6px; }
+.navegacion-calendario button { background: var(--color-borde); border: none; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.8rem; color: var(--texto-principal); }
+.dias-semana-calendario { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 0.75rem; font-weight: 700; color: var(--texto-secundario); margin-bottom: 8px; }
+.rejilla-calendario { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+
+.dia-calendario {
+    min-height: 80px; background: var(--fondo-principal); border: 1px solid var(--color-borde);
+    border-radius: 12px; padding: 6px; cursor: pointer; display: flex; flex-direction: column; justify-content: space-between;
+}
+.dia-calendario.seleccionado { border-color: var(--color-primario); background: var(--color-primario-claro); }
+.numero-dia { font-size: 0.75rem; font-weight: bold; }
+.conteo-dia { background: var(--color-primario); color: white; font-size: 0.6rem; padding: 1px 5px; border-radius: 10px; }
+.tarea-miniatura-calendario { font-size: 0.6rem; background: var(--fondo-tarjeta); padding: 2px 4px; border-radius: 4px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Notas Estilos */
+.rejilla-notas { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.tarjeta-nota { 
+    background: var(--fondo-principal); 
+    border: 1px solid var(--color-borde); 
+    padding: 16px; 
+    border-radius: 14px; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    gap: 12px; 
+    word-break: break-word;     /* <-- Añadido para romper palabras largas */
+    overflow-wrap: break-word;  /* <-- Añadido para forzar el salto de línea */
+}
+.tarjeta-nota p { font-size: 0.85rem; color: var(--texto-principal); }
+.eliminar-nota { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; text-align: right; font-weight: 600; }
+
+/* Modal */
+.capa-modal { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.capa-modal.oculto { display: none; }
+.tarjeta-modal { background: var(--fondo-tarjeta); border: 1px solid var(--color-borde); width: 100%; max-width: 480px; border-radius: 24px; padding: 24px; }
+.cabecera-modal { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+.btn-cerrar { background: transparent; border: none; font-size: 1.5rem; cursor: pointer; color: var(--texto-secundario); }
+.aviso-modal { font-size: 0.75rem; color: var(--texto-secundario); margin-bottom: 16px; }
+
+.grupo-formulario { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.grupo-formulario label { font-size: 0.7rem; font-weight: 700; text-transform: uppercase; color: var(--texto-secundario); }
+.grupo-formulario input, .grupo-formulario textarea, .grupo-formulario select {
+    background: var(--fondo-principal); border: 1px solid var(--color-borde); padding: 10px;
+    border-radius: 10px; font-size: 0.85rem; color: var(--texto-principal); outline: none;
+}
+.fila-formulario { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pie-modal { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--color-borde); padding-top: 14px; }
+.btn-secundario { background: var(--fondo-principal); border: 1px solid var(--color-borde); color: var(--texto-principal); }
+
+/* Botón de guardar en color morado */
+.btn-enviar { background: var(--color-primario); color: white; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
+.btn-enviar:hover { background: var(--color-primario-hover); }
+
+/* Estilo para mensajes de error de validación en rojo */
+.texto-error {
+    font-size: 0.7rem;
+    color: #ef4444;
+    font-weight: 600;
+    margin-top: 2px;
+    min-height: 12px;
+}
+
+.margen-superior { margin-top: 16px; }
+.margen-superior-sm { margin-top: 12px; }
