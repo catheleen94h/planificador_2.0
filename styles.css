@@ -36,7 +36,6 @@ body {
     overflow-x: hidden;
 }
 
-/* Canvas de partículas corregido para que sea visible */
 .animacion-fondo {
     position: fixed;
     top: 0;
@@ -184,8 +183,8 @@ body:not(.oscuro) .btn-icono img { filter: brightness(0) saturate(100%) invert(2
     flex-direction: column; 
     justify-content: space-between; 
     gap: 12px; 
-    word-break: break-word;     /* <-- Añadido para romper palabras largas */
-    overflow-wrap: break-word;  /* <-- Añadido para forzar el salto de línea */
+    word-break: break-word; 
+    overflow-wrap: break-word; 
 }
 .tarjeta-nota p { font-size: 0.85rem; color: var(--texto-principal); }
 .eliminar-nota { background: transparent; border: none; color: #ef4444; font-size: 0.75rem; cursor: pointer; text-align: right; font-weight: 600; }
@@ -208,7 +207,7 @@ body:not(.oscuro) .btn-icono img { filter: brightness(0) saturate(100%) invert(2
 .pie-modal { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; border-top: 1px solid var(--color-borde); padding-top: 14px; }
 .btn-secundario { background: var(--fondo-principal); border: 1px solid var(--color-borde); color: var(--texto-principal); }
 
-/* Botón de guardar en color morado */
+/* Botones en morado */
 .btn-enviar { background: var(--color-primario); color: white; border: none; border-radius: 12px; padding: 10px 16px; font-weight: 600; cursor: pointer; }
 .btn-enviar:hover { background: var(--color-primario-hover); }
 

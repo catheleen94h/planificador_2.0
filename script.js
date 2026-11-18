@@ -15,7 +15,6 @@ class TaskManager {
         return this.tasks.filter(task => task.estado === status);
     }
 
-    // Paso 4: Método para buscar una tarea por su id
     getTaskById(taskId) {
         let foundTask = null;
         for (let i = 0; i < this.tasks.length; i++) {
@@ -71,29 +70,19 @@ window.addEventListener('DOMContentLoaded', () => {
     renderizarNotas();
     document.getElementById('fecha-tarea').value = fechaSeleccionadaCalendario;
 
-    // Paso 2 y 5: Escuchar clics en la lista de tareas mediante delegación de eventos
+    // Escuchar clics en la lista de tareas mediante delegación de eventos
     const contenedorTareas = document.getElementById('contenedor-tareas');
     if (contenedorTareas) {
         contenedorTareas.addEventListener('click', (event) => {
-            // Verifica si se hizo clic en el botón/casilla de completar (o sus elementos internos)
             const botonCompletar = event.target.closest('.casilla-tarea');
             if (botonCompletar) {
-                // Usa recorrido del DOM para encontrar la tarjeta contenedora
                 const tarjetaElemento = event.target.closest('.tarjeta-tarea');
                 if (tarjetaElemento) {
-                    console.log("Elemento de la tarea encontrado:", tarjetaElemento); // Prueba solicitada en Paso 2
-                    
-                    // Obtiene el ID desde el atributo de datos y lo convierte a Number (Paso 3 y 5)
                     const taskId = Number(tarjetaElemento.dataset.taskId);
-                    console.log("ID de la tarea:", taskId);
-
-                    // Busca la tarea y actualiza su estado a 'HECHO'
                     const tarea = gestorTareas.getTaskById(taskId);
                     if (tarea) {
                         const nuevoEstado = (tarea.estado === 'HECHO') ? 'PENDIENTE' : 'HECHO';
                         gestorTareas.updateTask(taskId, nuevoEstado);
-                        
-                        // Vuelve a renderizar la lista para reflejar el cambio en pantalla
                         renderizarTareas();
                         renderizarCalendario();
                     }
@@ -102,6 +91,22 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// Función para capturar el nombre del modal inicial y actualizar el banner
+function guardarNombreUsuario(evento) {
+    evento.preventDefault();
+    const inputNombre = document.getElementById('input-nombre-usuario').value;
+    
+    if (inputNombre && inputNombre.trim() !== "") {
+        const nombreLimpio = inputNombre.trim();
+        // Actualiza el banner con el formato solicitado
+        document.getElementById('titulo-bienvenida').innerText = `¡Hola, ${nombreLimpio}!`;
+        document.getElementById('subtitulo-conteo').innerText = `Bienvenido a tu planificador. Administra, valida y elimina tus tareas.`;
+        
+        // Ocultar modal de bienvenida
+        document.getElementById('modal-nombre').classList.add('oculto');
+    }
+}
 
 // Validación de formulario
 function validateTaskForm(nombre, descripcion, asignadoA, fechaDeEntrega, estado) {
@@ -169,12 +174,10 @@ function limpiarErroresFormulario() {
     document.getElementById('error-estado').innerText = "";
 }
 
-// Paso 1 y 3: Renderizado de Tareas y asignación del atributo data-task-id
 function renderizarTareas() {
     const contenedor = document.getElementById('contenedor-tareas');
     if(!contenedor) return;
 
-    // 1. Limpiar el contenedor de tareas (para no duplicar tarjetas)
     contenedor.innerHTML = '';
 
     let listaTareas = gestorTareas.getAllTasks();
@@ -190,7 +193,6 @@ function renderizarTareas() {
         return;
     }
 
-    // 2 y 3. Recorrer this.tasks y crear las tarjetas usando template literals con el id en data-task-id
     contenedor.innerHTML = filtradas.map(tarea => {
         const estaCompletada = tarea.estado === 'HECHO' || tarea.estado === 'FINALIZADO';
         const estadoFormateado = tarea.estado.replace(' ', '-');
@@ -223,13 +225,12 @@ function renderizarTareas() {
     }).join('');
 }
 
-// Tarea 4: Eliminar tarea del array y del DOM
 function eliminarTarea(id) {
-    
+    if (confirm("¿Estás seguro de que deseas eliminar esta tarea?")) {
         gestorTareas.deleteTask(id);
         renderizarTareas();
         renderizarCalendario();
-    
+    }
 }
 
 function editarTarea(id) {
