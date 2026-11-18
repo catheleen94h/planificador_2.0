@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Zenith Tasks - Planificador de Tareas (Sprint 2)</title>
+    <title>Planificador de Tareas</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body class="claro">
@@ -12,14 +12,33 @@
         <canvas id="lienzo-particulas"></canvas>
     </div>
 
+    <!-- Modal Personalizado para Pedir el Nombre al Inicio -->
+    <div id="modal-nombre" class="capa-modal">
+        <div class="tarjeta-modal">
+            <div class="cabecera-modal">
+                <h3>¡Bienvenido a Tasks!</h3>
+            </div>
+            <p class="aviso-modal">Por favor, ingresa tu nombre para personalizar tu planificador.</p>
+            <form id="formulario-nombre" onsubmit="guardarNombreUsuario(event)">
+                <div class="grupo-formulario margen-superior-sm">
+                    <label for="input-nombre-usuario">Tu Nombre *</label>
+                    <input type="text" id="input-nombre-usuario" required placeholder="Ej. Ana Pérez">
+                </div>
+                <div class="pie-modal">
+                    <button type="submit" class="btn-enviar" style="width: 100%;">Continuar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <div class="contenedor-app">
         <!-- Encabezado -->
         <header class="app-encabezado">
             <div class="marca">
-                <div class="marca-logo">Z</div>
+                <div class="marca-logo"><img src="multimedia/clipboard.svg"></div>
                 <div>
-                    <h1>Zenith Tasks</h1>
-                    <p>Planificador inteligente - Sprint 2</p>
+                    <h1>Tasks</h1>
+                    <p>Planificador de tareas</p>
                 </div>
             </div>
 
@@ -45,9 +64,9 @@
             <section id="vista-hoy" class="seccion-vista">
                 <div class="banner-principal">
                     <div class="info-hero">
-                        <span class="insignia-activa">Sprint 2 Activo</span>
-                        <h2>Gestión de Tareas</h2>
-                        <p id="subtitulo-conteo">Administra, valida y elimina tus tareas programadas.</p>
+                       
+                        <h2 id="titulo-bienvenida">¡Hola, invitado!</h2>
+                        <p id="subtitulo-conteo">Bienvenido a tu planificador. Administra, valida y elimina tus tareas.</p>
                     </div>
                 </div>
 
