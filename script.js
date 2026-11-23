@@ -36,24 +36,44 @@ class TaskManager {
             estado: estado
         };
         this.tasks.push(nuevaTarea);
+        this.guardar();
         return nuevaTarea;
     }
 
     deleteTask(taskId) {
         this.tasks = this.tasks.filter(task => task.id !== taskId);
+        this.guardar();
     }
 
     updateTask(taskId, status) {
         const tarea = this.getTaskById(taskId);
         if (tarea) {
+            // Al marcar HECHO se recuerda el estado anterior; al desmarcar se restaura
+            if (status === 'HECHO') tarea.estadoPrevio = tarea.estado;
+            else if (status === 'PENDIENTE' && tarea.estadoPrevio) status = tarea.estadoPrevio;
             tarea.estado = status;
+            this.guardar();
         }
+    }
+
+    guardar() {
+        localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        localStorage.setItem('nextId', this.nextId);
+    }
+
+    cargar() {
+        const tareasGuardadas = localStorage.getItem('tasks');
+        if (tareasGuardadas) this.tasks = JSON.parse(tareasGuardadas);
+        const idGuardado = localStorage.getItem('nextId');
+        if (idGuardado) this.nextId = Number(idGuardado);
     }
 }
 
 // Instancias y variables globales
 const gestorTareas = new TaskManager();
-let listaNotas = [
+gestorTareas.cargar();
+let idEditando = null;
+let listaNotas = JSON.parse(localStorage.getItem('notas')) || [
     { id: 1, texto: "Recordar actualizar las credenciales de la API antes del despliegue del viernes." },
     { id: 2, texto: "Ideas para optimizar la interfaz de usuario." }
 ];
@@ -69,6 +89,13 @@ window.addEventListener('DOMContentLoaded', () => {
     renderizarCalendario();
     renderizarNotas();
     document.getElementById('fecha-tarea').value = fechaSeleccionadaCalendario;
+
+    // Si ya hay un nombre guardado, saludar y omitir el modal de bienvenida
+    const nombreGuardado = localStorage.getItem('nombreUsuario');
+    if (nombreGuardado) {
+        document.getElementById('titulo-bienvenida').innerText = `¡Hola, ${nombreGuardado}!`;
+        document.getElementById('modal-nombre').classList.add('oculto');
+    }
 
     // Escuchar clics en la lista de tareas mediante delegación de eventos
     const contenedorTareas = document.getElementById('contenedor-tareas');
@@ -99,6 +126,9 @@ function guardarNombreUsuario(evento) {
     
     if (inputNombre && inputNombre.trim() !== "") {
         const nombreLimpio = inputNombre.trim();
+        localStorage.setItem('nombreUsuario', nombreLimpio);
+        location.reload(); // recarga para mostrar las tarjetas guardadas
+        return;
         // Actualiza el banner con el formato solicitado
         document.getElementById('titulo-bienvenida').innerText = `¡Hola, ${nombreLimpio}!`;
         document.getElementById('subtitulo-conteo').innerText = `Bienvenido a tu planificador. Administra, valida y elimina tus tareas.`;
@@ -156,7 +186,14 @@ function manejarEnvioFormulario(evento) {
         return;
     }
 
-    gestorTareas.addTask(nombre, descripcion, asignadoA, fechaDeEntrega, estado);
+    if (idEditando !== null) {
+        const tarea = gestorTareas.getTaskById(idEditando);
+        Object.assign(tarea, { nombre, descripcion, asignado: asignadoA, fecha: fechaDeEntrega, estado });
+        gestorTareas.guardar();
+        idEditando = null;
+    } else {
+        gestorTareas.addTask(nombre, descripcion, asignadoA, fechaDeEntrega, estado);
+    }
 
     document.getElementById('formulario-tarea').reset();
     limpiarErroresFormulario();
@@ -203,7 +240,7 @@ function renderizarTareas() {
                         ${estaCompletada ? '✓' : ''}
                     </button>
                     <div>
-                        <h4 class="titulo-tarea ${estaCompletada ? 'tachado' : ''}">${tarea.nombre} (ID: ${tarea.id})</h4>
+                        <h4 class="titulo-tarea ${estaCompletada ? 'tachado' : ''}">${tarea.nombre} </h4>
                         <p class="descripcion-tarea">${tarea.descripcion}</p>
                         <div class="etiquetas-tarea">
                             <span class="etiqueta badge-${estadoFormateado}">${tarea.estado}</span>
@@ -353,6 +390,7 @@ function manejarEnvioNota(evento) {
     const texto = document.getElementById('texto-nota').value;
     if(texto.trim() !== "") {
         listaNotas.push({ id: Date.now(), texto });
+        localStorage.setItem('notas', JSON.stringify(listaNotas));
         document.getElementById('formulario-nota').reset();
         cerrarModalNota();
         renderizarNotas();
@@ -361,6 +399,7 @@ function manejarEnvioNota(evento) {
 
 function eliminarNota(id) {
     listaNotas = listaNotas.filter(n => n.id !== id);
+    localStorage.setItem('notas', JSON.stringify(listaNotas));
     renderizarNotas();
 }
 
@@ -391,6 +430,17 @@ function abrirModal(idEdicion = null) {
     document.getElementById('formulario-tarea').reset();
     document.getElementById('modal-tarea').classList.remove('oculto');
     document.getElementById('fecha-tarea').value = fechaSeleccionadaCalendario;
+
+    idEditando = idEdicion;
+    document.getElementById('titulo-modal').innerText = idEdicion ? 'Editar Tarea' : 'Nueva Tarea';
+    if (idEdicion) {
+        const t = gestorTareas.getTaskById(idEdicion);
+        document.getElementById('nombre-tarea').value = t.nombre;
+        document.getElementById('descripcion-tarea').value = t.descripcion;
+        document.getElementById('asignado-tarea').value = t.asignado;
+        document.getElementById('fecha-tarea').value = t.fecha;
+        document.getElementById('estado-tarea').value = t.estado;
+    }
 }
 
 function cerrarModal() {
