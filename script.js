@@ -1,10 +1,37 @@
-/**
- * Clase TaskManager requerida en el Sprint 2 (Tarea 2) y Sprint 3 (Tarea 7)
- */
+// ===== Conexión con el backend (Spring Boot) =====
+const API = 'http://localhost:8080/api/tasks';
+const API_NOTAS = 'http://localhost:8080/api/notes';
+
+// Backend -> formato que usa este frontend
+const aFront = t => ({ ...t, asignado: t.asignadoA, fecha: t.fechaEntrega });
+// Frontend -> formato que espera el backend
+const aBack = t => ({
+    nombre: t.nombre,
+    descripcion: t.descripcion,
+    asignadoA: t.asignado,
+    fechaEntrega: t.fecha,
+    estado: t.estado
+});
+
+async function api(url, metodo = 'GET', cuerpo) {
+    try {
+        const res = await fetch(url, {
+            method: metodo,
+            headers: { 'Content-Type': 'application/json' },
+            body: cuerpo && JSON.stringify(url.startsWith(API) ? aBack(cuerpo) : cuerpo)
+        });
+        if (res.status === 204) return true;
+        const datos = await res.json();
+        if (res.ok) return Array.isArray(datos) ? datos.map(aFront) : aFront(datos);
+        alert(datos.errores ? Object.values(datos.errores).join('\n') : datos.mensaje);
+    } catch (e) {
+        alert('No se pudo conectar con el servidor');
+    }
+}
+
 class TaskManager {
     constructor() {
         this.tasks = [];
-        this.nextId = 1;
     }
 
     getAllTasks() {
@@ -26,64 +53,51 @@ class TaskManager {
         return foundTask;
     }
 
-    addTask(nombre, descripcion, asignadoA, fechaDeEntrega, estado) {
-        const nuevaTarea = {
-            id: this.nextId++,
-            nombre: nombre,
-            descripcion: descripcion,
-            asignado: asignadoA,
-            fecha: fechaDeEntrega,
-            estado: estado
-        };
-        this.tasks.push(nuevaTarea);
-        this.guardar();
-        return nuevaTarea;
+    async cargar() {
+        this.tasks = (await api(API)) || [];
     }
 
-    deleteTask(taskId) {
-        this.tasks = this.tasks.filter(task => task.id !== taskId);
-        this.guardar();
+    async addTask(nombre, descripcion, asignadoA, fechaDeEntrega, estado) {
+        const t = await api(API, 'POST', { nombre, descripcion, asignado: asignadoA, fecha: fechaDeEntrega, estado });
+        if (t) this.tasks.push(t);
+        renderizarTareas();
+        renderizarCalendario();
     }
 
-    updateTask(taskId, status) {
-        const tarea = this.getTaskById(taskId);
-        if (tarea) {
-            // Al marcar HECHO se recuerda el estado anterior; al desmarcar se restaura
-            if (status === 'HECHO') tarea.estadoPrevio = tarea.estado;
-            else if (status === 'PENDIENTE' && tarea.estadoPrevio) status = tarea.estadoPrevio;
-            tarea.estado = status;
-            this.guardar();
+    async deleteTask(taskId) {
+        if (await api(`${API}/${taskId}`, 'DELETE')) {
+            this.tasks = this.tasks.filter(t => t.id !== taskId);
         }
+        renderizarTareas();
+        renderizarCalendario();
     }
 
-    guardar() {
-        localStorage.setItem('tasks', JSON.stringify(this.tasks));
-        localStorage.setItem('nextId', this.nextId);
-    }
-
-    cargar() {
-        const tareasGuardadas = localStorage.getItem('tasks');
-        if (tareasGuardadas) this.tasks = JSON.parse(tareasGuardadas);
-        const idGuardado = localStorage.getItem('nextId');
-        if (idGuardado) this.nextId = Number(idGuardado);
+    async updateTask(taskId, status) {
+        const t = this.getTaskById(taskId);
+        if (!t) return;
+        // Al marcar HECHO se recuerda el estado anterior; al desmarcar se restaura
+        const previo = status === 'HECHO' ? t.estado : t.estadoPrevio;
+        if (status === 'PENDIENTE' && previo) status = previo;
+        const nueva = await api(`${API}/${taskId}`, 'PUT', { ...t, estado: status });
+        if (nueva) Object.assign(t, nueva, { estadoPrevio: previo });
+        renderizarTareas();
+        renderizarCalendario();
     }
 }
 
 // Instancias y variables globales
 const gestorTareas = new TaskManager();
-gestorTareas.cargar();
 let idEditando = null;
-let listaNotas = JSON.parse(localStorage.getItem('notas')) || [
-    { id: 1, texto: "Recordar actualizar las credenciales de la API antes del despliegue del viernes." },
-    { id: 2, texto: "Ideas para optimizar la interfaz de usuario." }
-];
+let listaNotas = [];
 let filtroActual = 'todas';
 let busquedaActual = '';
 let anioActual = new Date().getFullYear();
 let mesActual = new Date().getMonth();
 let fechaSeleccionadaCalendario = new Date().toISOString().split('T')[0];
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    await gestorTareas.cargar();
+    listaNotas = (await api(API_NOTAS)) || [];
     iniciarParticulas();
     renderizarTareas();
     renderizarCalendario();
@@ -110,8 +124,6 @@ window.addEventListener('DOMContentLoaded', () => {
                     if (tarea) {
                         const nuevoEstado = (tarea.estado === 'HECHO') ? 'PENDIENTE' : 'HECHO';
                         gestorTareas.updateTask(taskId, nuevoEstado);
-                        renderizarTareas();
-                        renderizarCalendario();
                     }
                 }
             }
@@ -123,7 +135,7 @@ window.addEventListener('DOMContentLoaded', () => {
 function guardarNombreUsuario(evento) {
     evento.preventDefault();
     const inputNombre = document.getElementById('input-nombre-usuario').value;
-    
+
     if (inputNombre && inputNombre.trim() !== "") {
         const nombreLimpio = inputNombre.trim();
         localStorage.setItem('nombreUsuario', nombreLimpio);
@@ -132,7 +144,7 @@ function guardarNombreUsuario(evento) {
         // Actualiza el banner con el formato solicitado
         document.getElementById('titulo-bienvenida').innerText = `¡Hola, ${nombreLimpio}!`;
         document.getElementById('subtitulo-conteo').innerText = `Bienvenido a tu planificador. Administra, valida y elimina tus tareas.`;
-        
+
         // Ocultar modal de bienvenida
         document.getElementById('modal-nombre').classList.add('oculto');
     }
@@ -187,9 +199,15 @@ function manejarEnvioFormulario(evento) {
     }
 
     if (idEditando !== null) {
-        const tarea = gestorTareas.getTaskById(idEditando);
-        Object.assign(tarea, { nombre, descripcion, asignado: asignadoA, fecha: fechaDeEntrega, estado });
-        gestorTareas.guardar();
+        const t = gestorTareas.getTaskById(idEditando);
+        api(`${API}/${idEditando}`, 'PUT', { ...t, nombre, descripcion, asignado: asignadoA, fecha: fechaDeEntrega, estado })
+            .then(nueva => {
+                if (nueva) {
+                    Object.assign(t, nueva);
+                    renderizarTareas();
+                    renderizarCalendario();
+                }
+            });
         idEditando = null;
     } else {
         gestorTareas.addTask(nombre, descripcion, asignadoA, fechaDeEntrega, estado);
@@ -220,7 +238,7 @@ function renderizarTareas() {
     let listaTareas = gestorTareas.getAllTasks();
     let filtradas = listaTareas.filter(tarea => {
         const cumpleFiltro = filtroActual === 'todas' || tarea.estado === filtroActual;
-        const cumpleBusqueda = (tarea.nombre || '').toLowerCase().includes(busquedaActual.toLowerCase()) || 
+        const cumpleBusqueda = (tarea.nombre || '').toLowerCase().includes(busquedaActual.toLowerCase()) ||
                              (tarea.descripcion || '').toLowerCase().includes(busquedaActual.toLowerCase());
         return cumpleFiltro && cumpleBusqueda;
     });
@@ -265,8 +283,6 @@ function renderizarTareas() {
 function eliminarTarea(id) {
     if (confirm("¿Estás seguro de que deseas eliminar esta tarea?")) {
         gestorTareas.deleteTask(id);
-        renderizarTareas();
-        renderizarCalendario();
     }
 }
 
@@ -362,7 +378,7 @@ function renderizarTareasDiaSeleccionado() {
                 <div style="font-size: 0.85rem; font-weight: 600;">${tarea.nombre}</div>
                 <div style="font-size: 0.7rem; color: var(--texto-secundario);">${tarea.estado} • ${tarea.asignado}</div>
             </div>
-            <button onclick="gestorTareas.updateTask(${tarea.id}, '${tarea.estado === 'HECHO' ? 'PENDIENTE' : 'HECHO'}'); renderizarTareas(); renderizarCalendario();" class="btn-secundario" style="padding: 4px 10px; font-size: 0.75rem;">${tarea.estado === 'HECHO' ? 'Reabrir' : 'Completar'}</button>
+            <button onclick="gestorTareas.updateTask(${tarea.id}, '${tarea.estado === 'HECHO' ? 'PENDIENTE' : 'HECHO'}')" class="btn-secundario" style="padding: 4px 10px; font-size: 0.75rem;">${tarea.estado === 'HECHO' ? 'Reabrir' : 'Completar'}</button>
         </div>
     `).join('');
 }
@@ -385,22 +401,25 @@ function renderizarNotas() {
     `).join('');
 }
 
-function manejarEnvioNota(evento) {
+async function manejarEnvioNota(evento) {
     evento.preventDefault();
     const texto = document.getElementById('texto-nota').value;
-    if(texto.trim() !== "") {
-        listaNotas.push({ id: Date.now(), texto });
-        localStorage.setItem('notas', JSON.stringify(listaNotas));
-        document.getElementById('formulario-nota').reset();
-        cerrarModalNota();
-        renderizarNotas();
+    if (texto.trim() !== "") {
+        const nota = await api(API_NOTAS, 'POST', { texto });
+        if (nota) {
+            listaNotas.push(nota);
+            document.getElementById('formulario-nota').reset();
+            cerrarModalNota();
+            renderizarNotas();
+        }
     }
 }
 
-function eliminarNota(id) {
-    listaNotas = listaNotas.filter(n => n.id !== id);
-    localStorage.setItem('notas', JSON.stringify(listaNotas));
-    renderizarNotas();
+async function eliminarNota(id) {
+    if (await api(`${API_NOTAS}/${id}`, 'DELETE')) {
+        listaNotas = listaNotas.filter(n => n.id !== id);
+        renderizarNotas();
+    }
 }
 
 // Navegación y Modales
@@ -461,7 +480,7 @@ function iniciarParticulas() {
     const lienzo = document.getElementById('lienzo-particulas');
     if (!lienzo) return;
     const ctx = lienzo.getContext('2d');
-    
+
     let ancho = lienzo.width = window.innerWidth;
     let alto = lienzo.height = window.innerHeight;
 
@@ -488,7 +507,7 @@ function iniciarParticulas() {
             p.y += p.vy;
             if (p.x < 0 || p.x > ancho) p.vx *= -1;
             if (p.y < 0 || p.y > alto) p.vy *= -1;
-            
+
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.radio, 0, Math.PI * 2);
             ctx.fill();

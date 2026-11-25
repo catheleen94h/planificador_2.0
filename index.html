@@ -74,8 +74,8 @@
                     <div class="grupo-filtros">
                         <button onclick="filtrarTareas('todas')" class="chip-filtro activo" data-filtro="todas">Todas</button>
                         <button onclick="filtrarTareas('PENDIENTE')" class="chip-filtro" data-filtro="PENDIENTE">Pendientes</button>
-                        <button onclick="filtrarTareas('EN PROCESO')" class="chip-filtro" data-filtro="EN PROCESO">En Proceso</button>
-                        <button onclick="filtrarTareas('REVISIÓN')" class="chip-filtro" data-filtro="REVISIÓN">Revisión</button>
+                        <button onclick="filtrarTareas('EN_PROCESO')" class="chip-filtro" data-filtro="EN_PROCESO">En Proceso</button>
+                        <button onclick="filtrarTareas('REVISION')" class="chip-filtro" data-filtro="REVISION">Revisión</button>
                         <button onclick="filtrarTareas('HECHO')" class="chip-filtro" data-filtro="HECHO">Hecho</button>
                     </div>
                 </div>
@@ -162,8 +162,8 @@
                     <select id="estado-tarea">
                         <option value="" disabled selected>Selecciona estado</option>
                         <option value="PENDIENTE">PENDIENTE</option>
-                        <option value="EN PROCESO">EN PROCESO</option>
-                        <option value="REVISIÓN">REVISIÓN</option>
+                        <option value="EN_PROCESO">EN PROCESO</option>
+                        <option value="REVISION">REVISIÓN</option>
                         <option value="HECHO">HECHO</option>
                     </select>
                     <span id="error-estado" class="texto-error"></span>
@@ -197,6 +197,5 @@
     </div>
 
     <script src="script.js"></script>
-    <script src ="tarjetas_ejemplo.js"></script>
 </body>
 </html>
